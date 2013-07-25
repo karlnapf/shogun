@@ -37,15 +37,16 @@ enum ECovarianceFactorization
  * low-rank versions, and setting the precision matrix \f$\Sigma^{-1} \f$
  * directly.
  *
- * All factorizations store a matrix m_L, such that the covariance can be
- * computed as LL^T.
+ * All factorizations store a matrix \f$F\f$, such that the covariance can be
+ * computed as \f$\Sigma=LL^T\f$.
  *
  * For Cholesky factorization, the lower factor \f$\Sigma=LL^T\f$ is computed
  * with a eigen3's LDLT (robust Cholesky with pivoting).
  *
- * For SVD factorization U diag(s) V^T, the factor U*s (column-wise product) is
- * stored. SVD factorization may be done in a low rank version in the sense that
- * only the first few Eigenvectors are used for the covariance factor.
+ * For SVD factorization \f$\Sigma=USV^T\f$, the factor \f$U*\text{diag}(S)\f$
+ * (column-wise product) is stored. SVD factorization may be done in a low rank
+ * version in the sense that only the first few Eigenvectors are used for the
+ * covariance factor.
  */
 
 class CGaussianDistribution: public CProbabilityDistribution
