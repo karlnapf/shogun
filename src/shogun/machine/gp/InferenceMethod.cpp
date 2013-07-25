@@ -96,3 +96,25 @@ void CInferenceMethod::set_scale(float64_t s)
 {
 	m_scale=s;
 }
+
+float64_t CInferenceMethod::get_log_ml_estimate(
+		int32_t num_importance_samples)
+{
+	SG_NOTIMPLEMENTED;
+
+	/* sample from Gaussian approximation to q(f|y) */
+	SGMatrix<float64_t> cov=get_posterior_approximation_covariance();
+	SGVector<float64_t> mean=get_posterior_approximation_mean();
+
+	/* evaluate q(f^i|y), p(f^i|\theta), p(f^i|y), i.e.,
+	 * log pdf of approximation, prior and likelihood */
+
+	/* log pdf q(f^i|y) */
+
+	/* log pdf p(f^i|y) */
+
+	/* p(f^i|y) */
+
+	/* use log-sum-exp (in particular, log-mean-exp) trick to combine values */
+	return 0.0;
+}

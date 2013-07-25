@@ -79,7 +79,8 @@ public:
 	/** get log marginal likelihood gradient
 	 *
 	 * @return vector of the marginal likelihood function gradient
-	 * with respect to hyperparameters:
+	 * with respect to hyperparameters (under the current approximation
+	 * to the posterior \f$q(f|y)\approx p(f|y)\f$:
 	 *
 	 * \f[
 	 * -\frac{\partial log(p(y|X, \theta))}{\partial \theta}
@@ -145,7 +146,8 @@ public:
 	 */
 	virtual SGVector<float64_t> get_posterior_approximation_mean()
 	{
-		SG_ERROR("Inference method doesn't use approximation to the posterior")
+		SG_ERROR("Inference method doesn't use a Gaussian approximation to the"
+				" posterior")
 		return SGVector<float64_t>();
 	}
 
@@ -161,7 +163,8 @@ public:
 	 */
 	virtual SGMatrix<float64_t> get_posterior_approximation_covariance()
 	{
-		SG_ERROR("Inference method doesn't use approximation to the posterior")
+		SG_ERROR("Inference method doesn't use a gaussian approximation to the "
+				"posterior")
 		return SGMatrix<float64_t>();
 	}
 
@@ -260,6 +263,37 @@ public:
 
 	/** update all matrices */
 	virtual void update_all()=0;
+
+	/** Computes an unbiased estimate of the log-marginal-likelihood,
+	 *
+	 * \f[
+	 * log(p(y|\theta)),
+	 * \f]
+	 * where \f$y\f$ are the labels, \f$X\f$ are the features, and
+	 * \f$\theta\f$ represent hyperparameters.
+	 *
+	 * This is done via an approximation to the posterior
+	 * \f$q(f|y, \theta)\approx p(f|y, \theta)\f$, which is computed by the
+	 * underlying CInferenceMethod instance (if implemented, otherwise error),
+	 * and then using an importance sample estimator
+	 *
+	 * \f[
+	 * p(y|\theta)=\int p(y|f)p(f|\theta)df
+	 * =\int p(y|f)\frac{p(f|\theta)}{q(f|y, \theta)}q(f|y, \theta)df
+	 * \approx\frac{1}{n}\sum_{i=1}^n p(y|f^{(i)})\frac{p(f^{(i)}|\theta)}{q(f^{(i)}|y, \theta)},
+	 * \f]
+	 *
+	 * where \f$ f^{(i)} \f$ are samples from the posterior approximation
+	 * \f$ q(f|y, \theta) \f$. The resulting estimator has a low variance if
+	 * \f$ q(f|y, \theta) \f$ is a good approximation. It has large variance
+	 * otherwise (while still being consistent).
+	 *
+	 * @param num_importance_samples the number of importance samples \f$n\f$
+	 * from \f$ q(f|y, \theta) \f$.
+	 * @return unbiased estimate of the  log of the marginal likelihood
+	 * function \f$ log(p(y|\theta)) \f$
+	 */
+	float64_t get_log_ml_estimate(int32_t num_importance_samples=1);
 
 protected:
 	/** update alpha matrix */
