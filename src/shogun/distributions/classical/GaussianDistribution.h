@@ -41,7 +41,7 @@ enum ECovarianceFactorization
  * computed as \f$\Sigma=LL^T\f$.
  *
  * For Cholesky factorization, the lower factor \f$\Sigma=LL^T\f$ is computed
- * with a eigen3's LDLT (robust Cholesky with pivoting).
+ * with a eigen3's LDLT (classic Cholesky, or robust Cholesky with pivoting).
  *
  * For SVD factorization \f$\Sigma=USV^T\f$, the factor \f$U*\text{diag}(S)\f$
  * (column-wise product) is stored. SVD factorization may be done in a low rank
