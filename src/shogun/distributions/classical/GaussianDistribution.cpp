@@ -61,8 +61,8 @@ void CGaussianDistribution::init()
 	SG_ADD(&m_mean, "mean", "Mean of the Gaussian.", MS_NOT_AVAILABLE);
 	SG_ADD(&m_L, "L", "Lower factor of covariance matrix, "
 			"depending on the factorization type.", MS_NOT_AVAILABLE);
-	SG_ADD((machine_int_t*)&m_factorization, "factorization", "Type of the factorization of "
-			"the covariance matrix.", MS_NOT_AVAILABLE);
+	SG_ADD((machine_int_t*)&m_factorization, "factorization", "Type of the "
+			"factorization of the covariance matrix.", MS_NOT_AVAILABLE);
 }
 
 void CGaussianDistribution::compute_covariance_factorization(
@@ -118,6 +118,11 @@ void CGaussianDistribution::compute_covariance_factorization(
 			SG_ERROR("Unknown factorization type: %d\n", m_factorization);
 			break;
 	}
+}
+
+SGMatrix<float64_t> CGaussianDistribution::get_covariance_factor()
+{
+	return m_L;
 }
 
 #endif // HAVE_EIGEN3

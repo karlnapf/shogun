@@ -18,6 +18,12 @@
 namespace shogun
 {
 
+/** Different types of covariance factorizations. See CGaussianDistribution. */
+enum ECovarianceFactorization
+{
+	G_CHOLESKY, G_CHOLESKY_PIVOT, G_SVD
+};
+
 /** @brief Dense version of the well-known Gaussian probability distribution,
  * defined as
  * \f[
@@ -41,11 +47,6 @@ namespace shogun
  * stored. SVD factorization may be done in a low rank version in the sense that
  * only the first few Eigenvectors are used for the covariance factor.
  */
-
-enum ECovarianceFactorization
-{
-	G_CHOLESKY, G_CHOLESKY_PIVOT, G_SVD
-};
 
 class CGaussianDistribution: public CProbabilityDistribution
 {
@@ -87,6 +88,12 @@ public:
 	 * @return vector with log-pdfs of given samples
 	 */
 	virtual SGVector<float64_t> log_pdf(SGMatrix<float64_t> samples);
+
+	/** @return the ccurrent covariance factor matrix. Dimensions are either
+	 * DxD in the number of distribution dimensions or dxD where d is a low
+	 * rank approximation dimension
+	 */
+	SGMatrix<float64_t> get_covariance_factor();
 
 	/** @return name of the SGSerializable */
 	virtual const char* get_name() const
