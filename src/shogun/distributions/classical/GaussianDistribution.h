@@ -21,8 +21,9 @@ namespace shogun
 /** Different types of covariance factorizations. See CGaussianDistribution. */
 enum ECovarianceFactorization
 {
-	G_CHOLESKY, G_CHOLESKY_PIVOT, G_SVD
+	CF_CHOLESKY, CF_CHOLESKY_PIVOT, CF_SVD
 };
+
 
 /** @brief Dense version of the well-known Gaussian probability distribution,
  * defined as
@@ -44,9 +45,7 @@ enum ECovarianceFactorization
  * with a eigen3's LDLT (classic Cholesky, or robust Cholesky with pivoting).
  *
  * For SVD factorization \f$\Sigma=USV^T\f$, the factor \f$U*\text{diag}(S)\f$
- * (column-wise product) is stored. SVD factorization may be done in a low rank
- * version in the sense that only the first few Eigenvectors are used for the
- * covariance factor.
+ * (column-wise product) is stored.
  */
 
 class CGaussianDistribution: public CProbabilityDistribution
@@ -65,13 +64,10 @@ public:
 	 * Cholesky)
 	 * @param cov_is_factor whether cov is a factor of the covariance or not
 	 * (default is false). If false, the factorization is explicitly computed
-	 * @param low_rank_dimension if a SVD factorization is used, one can
-	 * optionally specify the number of dimensions to produce a low-rank
-	 * approximation of the covariance. Ignored if 0 (default is 0).
-	 *  */
+	 */
 	CGaussianDistribution(SGVector<float64_t> mean, SGMatrix<float64_t> cov,
-			ECovarianceFactorization factorization=G_CHOLESKY,
-			bool cov_is_factor=false, int32_t low_rank_dimension=0);
+			ECovarianceFactorization factorization=CF_CHOLESKY,
+			bool cov_is_factor=false);
 
 	/** Destructor */
 	virtual ~CGaussianDistribution();
@@ -83,18 +79,28 @@ public:
 	 */
 	virtual SGMatrix<float64_t> sample(int32_t num_samples);
 
-	/** Computes the log-pdf for all provided samples
+	/** Computes the log-pdf for all provided samples. That is
+	 *
+	 * \f[
+	 * \log(\mathcal{N}_x(\mu,\Sigma))=
+	 * - \frac{d}{2}  \log(2\pi)
+	 * -\frac{1}{2}\log(\det(\Sigma))
+	 * -\frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu),
+	 * \f]
+	 *
+	 * where \f$d\f$ is the dimension of the Gaussian.
+	 * The method to compute the log-determinant is based on the factorization
+	 * of the covariance matrix. If a Cholesky based factorization is used, the
+	 * log-determinant is computed using the triangular factor. If an SVD
+	 * factorization is used, the log-determinant is computed using a QR
+	 * factorization (which is computed once).
+	 *
+	 * The inversion of the covariance is done using the factorization.
 	 *
 	 * @param samples samples to compute log-pdf of (column vectors)
 	 * @return vector with log-pdfs of given samples
 	 */
 	virtual SGVector<float64_t> log_pdf(SGMatrix<float64_t> samples);
-
-	/** @return the ccurrent covariance factor matrix. Dimensions are either
-	 * DxD in the number of distribution dimensions or dxD where d is a low
-	 * rank approximation dimension
-	 */
-	SGMatrix<float64_t> get_covariance_factor();
 
 	/** @return name of the SGSerializable */
 	virtual const char* get_name() const
@@ -107,10 +113,13 @@ private:
 	/** Initialses and registers parameters */
 	void init();
 
-	/** Computes and stores the factorization of the covariance matrix */
+	/** Computes and stores the factorization of the covariance matrix
+	 *
+	 * @param cov positive definite covariance matrix to compute factorization of
+	 * @param factorization the factorizaation type to be used
+	 */
 	void compute_covariance_factorization(SGMatrix<float64_t> cov,
-			ECovarianceFactorization factorization,
-			int32_t low_rank_dimension);
+			ECovarianceFactorization factorization);
 
 protected:
 	/** Mean */
