@@ -34,8 +34,6 @@
 		- Use Dynamic arrays to hold Features in CombinedFeatures.
 		- Use Dynamic arrays to hold Kernels in CombinedKernels/ProductKernels.
 		- Use Eigen3 for GPs, LDA
-		- The old dense sample_from_gaussian methods are replaced by new
-		  GaussianDistribution class.
 
 2013-03-17 Soeren Sonnenburg <sonne@debian.org>
 
