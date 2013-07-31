@@ -129,6 +129,23 @@ public:
 	virtual SGVector<float64_t> get_log_probability_f(CLabels* lab,
 			SGVector<float64_t> func)=0;
 
+	/** returns the log-likelihood
+	 * \f$log(p(y|f)) =
+	 * \sum_{i=1}^{n} log(p(y_i|f_i))\f$
+	 *
+	 * for each of the provided functions \f$ f \f$.
+	 *
+	 * Wrapper method which calls get_log_probability_f multiple times.
+	 *
+	 * @param lab labels \f$y_i\f$
+	 * @param F values of the function \f$f_i\f$ where each column of the matrix
+	 * is one function.
+	 *
+	 * @return log-likelihood for every provided function
+	 */
+	virtual SGVector<float64_t> get_log_probability_f(CLabels* lab,
+			SGMatrix<float64_t> F);
+
 	/** get derivative of log likelihood \f$log(p(y|f))\f$ with
 	 * respect to location function \f$f\f$
 	 *
