@@ -13,7 +13,6 @@
 
 #include <shogun/distributions/classical/ProbabilityDistribution.h>
 #include <shogun/lib/SGVector.h>
-#include <shogun/lib/SGMatrix.h>
 
 namespace shogun
 {
@@ -21,7 +20,8 @@ namespace shogun
 /** Different types of covariance factorizations. See CGaussianDistribution. */
 enum ECovarianceFactorization
 {
-	CF_CHOLESKY, CF_CHOLESKY_PIVOT, CF_SVD
+	CF_CHOLESKY,
+	CF_SVD_QR
 };
 
 
@@ -35,17 +35,19 @@ enum ECovarianceFactorization
  *
  * The implementation offers various techniques for representing the covariance
  * matrix \f$\Sigma \f$, such as Cholesky factorisation, SVD-decomposition,
- * low-rank versions, and setting the precision matrix \f$\Sigma^{-1} \f$
- * directly.
+ * QR factorization, etc.
  *
  * All factorizations store a matrix \f$F\f$, such that the covariance can be
  * computed as \f$\Sigma=LL^T\f$.
  *
  * For Cholesky factorization, the lower factor \f$\Sigma=LL^T\f$ is computed
- * with a eigen3's LDLT (classic Cholesky, or robust Cholesky with pivoting).
+ * with a eigen3's LLT (classic Cholesky.
+ * The factor \f$L\f$ can be used for both sampling and computing the log-pdf.
  *
  * For SVD factorization \f$\Sigma=USV^T\f$, the factor \f$U*\text{diag}(S)\f$
- * (column-wise product) is stored.
+ * (column-wise product) is stored for sampling. For evaluating the
+ * log-determinant of the log-pdf, a QR factorization of the covariance
+ * \f$\Sigma=QR\f$ is used.
  */
 
 class CGaussianDistribution: public CProbabilityDistribution
@@ -61,7 +63,7 @@ public:
 	 * @param mean mean of the Gaussian
 	 * @param cov covariance of the Gaussian, or covariance factor
 	 * @param factorization factorization type of covariance matrix (default is
-	 * Cholesky)
+	 * Cholesky, others are for increased numerical stability)
 	 * @param cov_is_factor whether cov is a factor of the covariance or not
 	 * (default is false). If false, the factorization is explicitly computed
 	 */
@@ -75,9 +77,13 @@ public:
 	/** Samples from the distribution multiple times
 	 *
 	 * @param num_samples number of samples to generate
+	 * @param pre_samples a matrix of standard normal samples that might be used
+	 * for sampling the Gaussian. Ignored by default. If passed, the pre-samples
+	 * will be modified.
 	 * @return matrix with samples (column vectors)
 	 */
-	virtual SGMatrix<float64_t> sample(int32_t num_samples);
+	virtual SGMatrix<float64_t> sample(int32_t num_samples,
+			SGMatrix<float64_t> pre_samples=SGMatrix<float64_t>()) const;
 
 	/** Computes the log-pdf for all provided samples. That is
 	 *
@@ -92,7 +98,7 @@ public:
 	 * The method to compute the log-determinant is based on the factorization
 	 * of the covariance matrix. If a Cholesky based factorization is used, the
 	 * log-determinant is computed using the triangular factor. If an SVD
-	 * factorization is used, the log-determinant is computed using a QR
+	 * factorization is used for sampling, the log-pdf is computed using a QR
 	 * factorization (which is computed once).
 	 *
 	 * The inversion of the covariance is done using the factorization.
@@ -100,7 +106,7 @@ public:
 	 * @param samples samples to compute log-pdf of (column vectors)
 	 * @return vector with log-pdfs of given samples
 	 */
-	virtual SGVector<float64_t> log_pdf(SGMatrix<float64_t> samples);
+	virtual SGVector<float64_t> log_pdf(SGMatrix<float64_t> samples) const;
 
 	/** @return name of the SGSerializable */
 	virtual const char* get_name() const
@@ -126,8 +132,14 @@ protected:
 	SGVector<float64_t> m_mean;
 
 	/** Lower factor of covariance matrix (depends on factorization type).
-	 * Covariance (approximation) is given by LL^T */
+	 * Covariance (approximation) is given by \f$\Sigma=LL^T\f$ */
 	SGMatrix<float64_t> m_L;
+
+	/** Orthogonal Q factor of \f$\Sigma=QR\f$ factorization of covariance */
+	SGMatrix<float64_t> m_Q;
+
+	/** Triangular R factor of \f$\Sigma=QR\f$ factorization of covariance */
+	SGMatrix<float64_t> m_R;
 
 	/** Type of the factorization of the covariance matrix */
 	ECovarianceFactorization m_factorization;

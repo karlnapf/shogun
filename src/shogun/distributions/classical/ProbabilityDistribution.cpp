@@ -14,14 +14,18 @@
 
 using namespace shogun;
 
-CProbabilityDistribution::CProbabilityDistribution()
+CProbabilityDistribution::CProbabilityDistribution() : CSGObject()
 {
 	init();
 }
 
-CProbabilityDistribution::CProbabilityDistribution(int32_t dimension)
+CProbabilityDistribution::CProbabilityDistribution(int32_t dimension) :
+		CSGObject()
 {
 	init();
+
+	REQUIRE(dimension>0, "Dimension of Distribution must be positive\n",
+			dimension);
 
 	m_dimension=dimension;
 }
@@ -32,13 +36,14 @@ CProbabilityDistribution::~CProbabilityDistribution()
 
 }
 
-SGMatrix<float64_t> CProbabilityDistribution::sample(int32_t num_samples)
+SGMatrix<float64_t> CProbabilityDistribution::sample(int32_t num_samples,
+		SGMatrix<float64_t> pre_samples) const
 {
 	SG_ERROR("Not implemented in sub-class\n");
 	return SGMatrix<float64_t>();
 }
 
-SGVector<float64_t> CProbabilityDistribution::sample()
+SGVector<float64_t> CProbabilityDistribution::sample() const
 {
 	SGMatrix<float64_t> s=sample(1);
 	SGVector<float64_t> result(m_dimension);
@@ -46,14 +51,19 @@ SGVector<float64_t> CProbabilityDistribution::sample()
 	return result;
 }
 
-SGVector<float64_t> CProbabilityDistribution::log_pdf(SGMatrix<float64_t> samples)
+SGVector<float64_t> CProbabilityDistribution::log_pdf(
+		SGMatrix<float64_t> samples) const
 {
 	SG_ERROR("Not implemented in sub-class\n");
 	return SGVector<float64_t>();
 }
 
-float64_t CProbabilityDistribution::log_pdf(SGVector<float64_t> single_sample)
+float64_t CProbabilityDistribution::log_pdf(SGVector<float64_t> single_sample) const
 {
+	REQUIRE(single_sample.vlen==m_dimension, "Sample dimension (%d) does not "
+			"match dimension of distribution (%d)\n", single_sample.vlen,
+			m_dimension);
+
 	SGMatrix<float64_t> s(m_dimension, 1);
 	memcpy(s.matrix, single_sample.vector, m_dimension*sizeof(float64_t));
 	return log_pdf(s)[0];
