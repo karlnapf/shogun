@@ -11,6 +11,10 @@
 
 #include <shogun/machine/gp/InferenceMethod.h>
 #include <shogun/distributions/classical/GaussianDistribution.h>
+#include <shogun/mathematics/Statistics.h>
+
+#include <shogun/mathematics/eigen3.h>
+using namespace Eigen;
 
 using namespace shogun;
 
@@ -98,12 +102,13 @@ void CInferenceMethod::set_scale(float64_t s)
 	m_scale=s;
 }
 
-float64_t CInferenceMethod::log_ml_estimate(
+float64_t CInferenceMethod::get_log_ml_estimate(
 		int32_t num_importance_samples, ECovarianceFactorization factorization)
 {
 	/* sample from Gaussian approximation to q(f|y) */
 	SGMatrix<float64_t> cov=get_posterior_approximation_covariance();
 	SGVector<float64_t> mean=get_posterior_approximation_mean();
+
 	CGaussianDistribution* post_approx=new CGaussianDistribution(mean, cov,
 			factorization);
 	SGMatrix<float64_t> samples=post_approx->sample(num_importance_samples);
@@ -118,17 +123,24 @@ float64_t CInferenceMethod::log_ml_estimate(
 	SG_UNREF(post_approx);
 	post_approx=NULL;
 
-	/* log pdf p(f^i|\theta) */
+	/* log pdf p(f^i|\theta) and free memory afterwise */
 	CGaussianDistribution* prior=new CGaussianDistribution(
 			m_mean->get_mean_vector(m_feature_matrix), m_ktrtr, factorization);
 	SGVector<float64_t> log_pdf_prior=prior->log_pdf(samples);
+	SG_UNREF(prior);
+	prior=NULL;
 
 	/* p(y|f^i) */
 	SGVector<float64_t> log_likelihood=m_model->get_log_probability_f(
 			m_labels, samples);
 
 	/* combine probabilities */
-	SGVector<float64_t> sum=log_likelihood+log_pdf_prior-log_pdf_post_approx;
+	ASSERT(log_likelihood.vlen==num_importance_samples);
+	ASSERT(log_likelihood.vlen==log_pdf_prior.vlen);
+	ASSERT(log_likelihood.vlen==log_pdf_post_approx.vlen);
+	SGVector<float64_t> sum(log_likelihood);
+	for (index_t i=0; i<log_likelihood.vlen; ++i)
+		sum[i]=log_likelihood[i]+log_pdf_prior[i]-log_pdf_post_approx[i];
 
 	/* use log-sum-exp (in particular, log-mean-exp) trick to combine values */
 	return CMath::log_mean_exp(sum);

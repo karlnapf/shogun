@@ -300,7 +300,7 @@ public:
 	 * @return unbiased estimate of the  log of the marginal likelihood
 	 * function \f$ log(p(y|\theta)) \f$
 	 */
-	float64_t log_ml_estimate(int32_t num_importance_samples=1,
+	float64_t get_log_ml_estimate(int32_t num_importance_samples=1,
 			ECovarianceFactorization factorization=CF_CHOLESKY);
 
 protected:
