@@ -19,6 +19,7 @@
 #include <shogun/machine/gp/LikelihoodModel.h>
 #include <shogun/machine/gp/MeanFunction.h>
 #include <shogun/evaluation/DifferentiableFunction.h>
+#include <shogun/distributions/classical/GaussianDistribution.h>
 
 namespace shogun
 {
@@ -36,6 +37,9 @@ enum EInferenceType
  *
  * The Inference Method computes (approximately) the posterior
  * distribution for a given Gaussian Process.
+ *
+ * It is possible to sample the (true) log-marginal likelihood on the base of
+ * any implemented approximation. See log_ml_estimate.
  */
 class CInferenceMethod : public CDifferentiableFunction
 {
@@ -290,10 +294,14 @@ public:
 	 *
 	 * @param num_importance_samples the number of importance samples \f$n\f$
 	 * from \f$ q(f|y, \theta) \f$.
+	 * @param factorization type to factorize the Gaussian covariances. Default
+	 * is Cholesky but this might be changed to SVD/QR for greater numerical
+	 * stability.
 	 * @return unbiased estimate of the  log of the marginal likelihood
 	 * function \f$ log(p(y|\theta)) \f$
 	 */
-	float64_t get_log_ml_estimate(int32_t num_importance_samples=1);
+	float64_t log_ml_estimate(int32_t num_importance_samples=1,
+			ECovarianceFactorization factorization=CF_CHOLESKY);
 
 protected:
 	/** update alpha matrix */

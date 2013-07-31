@@ -98,14 +98,14 @@ void CInferenceMethod::set_scale(float64_t s)
 	m_scale=s;
 }
 
-float64_t CInferenceMethod::get_log_ml_estimate(
-		int32_t num_importance_samples)
+float64_t CInferenceMethod::log_ml_estimate(
+		int32_t num_importance_samples, ECovarianceFactorization factorization)
 {
 	/* sample from Gaussian approximation to q(f|y) */
 	SGMatrix<float64_t> cov=get_posterior_approximation_covariance();
 	SGVector<float64_t> mean=get_posterior_approximation_mean();
 	CGaussianDistribution* post_approx=new CGaussianDistribution(mean, cov,
-			CF_CHOLESKY);
+			factorization);
 	SGMatrix<float64_t> samples=post_approx->sample(num_importance_samples);
 
 	/* evaluate q(f^i|y), p(f^i|\theta), p(y|f^i), i.e.,
@@ -120,7 +120,7 @@ float64_t CInferenceMethod::get_log_ml_estimate(
 
 	/* log pdf p(f^i|\theta) */
 	CGaussianDistribution* prior=new CGaussianDistribution(
-			m_mean->get_mean_vector(m_feature_matrix), m_ktrtr, CF_CHOLESKY);
+			m_mean->get_mean_vector(m_feature_matrix), m_ktrtr, factorization);
 	SGVector<float64_t> log_pdf_prior=prior->log_pdf(samples);
 
 	/* p(y|f^i) */
