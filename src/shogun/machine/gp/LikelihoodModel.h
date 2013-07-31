@@ -130,8 +130,7 @@ public:
 			SGVector<float64_t> func)=0;
 
 	/** Returns the log-likelihood
-	 * \f$log(p(y|f)) =
-	 * \sum_{i=1}^{n} log(p(y_i|f_i))\f$
+	 * \f$log(p(y|f)) = \sum_{i=1}^{n} log(p(y_i|f_i))\f$
 	 * for each of the provided functions \f$ f \f$ in the given matrix.
 	 *
 	 * Wrapper method which calls get_log_probability_f multiple times.
