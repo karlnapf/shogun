@@ -10,6 +10,7 @@
  */
 
 #include <shogun/machine/gp/InferenceMethod.h>
+#include <shogun/distributions/classical/GaussianDistribution.h>
 
 using namespace shogun;
 
@@ -100,21 +101,35 @@ void CInferenceMethod::set_scale(float64_t s)
 float64_t CInferenceMethod::get_log_ml_estimate(
 		int32_t num_importance_samples)
 {
-	SG_NOTIMPLEMENTED;
-
 	/* sample from Gaussian approximation to q(f|y) */
 	SGMatrix<float64_t> cov=get_posterior_approximation_covariance();
 	SGVector<float64_t> mean=get_posterior_approximation_mean();
+	CGaussianDistribution* post_approx=new CGaussianDistribution(mean, cov,
+			CF_CHOLESKY);
+	SGMatrix<float64_t> samples=post_approx->sample(num_importance_samples);
 
-	/* evaluate q(f^i|y), p(f^i|\theta), p(f^i|y), i.e.,
+	/* evaluate q(f^i|y), p(f^i|\theta), p(y|f^i), i.e.,
 	 * log pdf of approximation, prior and likelihood */
 
 	/* log pdf q(f^i|y) */
+	SGVector<float64_t> log_pdf_post_approx=post_approx->log_pdf(samples);
 
-	/* log pdf p(f^i|y) */
+	/* dont need gaussian anymore, free memory */
+	SG_UNREF(post_approx);
+	post_approx=NULL;
 
-	/* p(f^i|y) */
+	/* log pdf p(f^i|\theta) */
+	CGaussianDistribution* prior=new CGaussianDistribution(
+			m_mean->get_mean_vector(m_feature_matrix), m_ktrtr, CF_CHOLESKY);
+	SGVector<float64_t> log_pdf_prior=prior->log_pdf(samples);
+
+	/* p(y|f^i) */
+	SGVector<float64_t> log_likelihood=m_model->get_log_probability_f(
+			m_labels, samples);
+
+	/* combine probabilities */
+	SGVector<float64_t> sum=log_likelihood+log_pdf_prior-log_pdf_post_approx;
 
 	/* use log-sum-exp (in particular, log-mean-exp) trick to combine values */
-	return 0.0;
+	return CMath::log_mean_exp(sum);
 }
