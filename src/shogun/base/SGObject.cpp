@@ -1120,3 +1120,12 @@ std::string CSGObject::string_enum_reverse_lookup(
 	    });
 	return enum_map_it->first;
 }
+
+namespace shogun
+{
+template <class T>
+void test()
+{
+	T* a;
+}
+}
